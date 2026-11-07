@@ -1,0 +1,46 @@
+files:      667  compile clean:      609  failing: 58
+
+== top error messages (normalised)
+  42 function X is used but not defined in this translation unit, and cannot be defined in any other translation unit because its type does not have linkage
+  20 unsupported architecture X for MS-style inline assembly
+  19 use of undeclared identifier X
+   9 no matching function for call to X
+   5 static assertion failed due to requirement X: only plain functions and simple member functions
+   3 no template named X in namespace X
+   3 no member named X in X
+   3 no member named X in namespace X
+   2 X file not found
+   2 use of undeclared identifier X; did you mean X?
+   2 expected X after top level declarator
+   1 X is not followed by a macro parameter
+   1 variable has incomplete type X
+   1 static assertion failed due to requirement X: zeroed as 0x113 dwords
+   1 cannot initialize a parameter of type X with an rvalue of type X (aka X)
+   1 a type specifier is required for all declarations
+   1 #endif without #if
+
+== top undeclared/unknown names
+   4 RegCreateKeyA
+   1 WM_POWERBROADCAST
+   1 win
+   1 WA_CLICKACTIVE
+   1 WA_ACTIVE
+   1 ValidateRect
+   1 tan
+   1 SW_MAXIMIZE
+   1 sin
+   1 SC_KEYMENU
+   1 S_un
+   1 mbstowcs_s
+   1 K32GetProcessMemoryInfo
+   1 GetProcessTimes
+   1 Falloff
+   1 dwAvailPhys
+   1 DIJOFS_Y
+   1 DIJOFS_X
+   1 DIDOI_FFACTUATOR
+   1 DI8DEVTYPE_MOUSE
+   1 DI8DEVTYPE_KEYBOARD
+   1 DI8DEVTYPE_JOYSTICK
+   1 DI8DEVTYPE_GAMEPAD
+   1 cos

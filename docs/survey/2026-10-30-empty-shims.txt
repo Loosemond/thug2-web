@@ -1,0 +1,118 @@
+files:      667  compile clean:       82  failing: 585
+
+== top error messages (normalised)
+ 939 use of undeclared identifier X
+ 664 unknown type name X
+ 545 redefinition of X
+ 536 unsupported architecture X for MS-style inline assembly
+ 243 member reference base type X is not a structure or union
+ 105 X attribute is not supported on X
+  78 use of undeclared identifier X; did you mean X?
+  62 member access into incomplete type X
+  61 expected expression
+  37 unknown type name X; did you mean X?
+  26 expected X after top level declarator
+   9 no matching function for call to X
+   7 static assertion expression is not an integral constant expression
+   6 invalid application of X to an incomplete type X
+   6 cannot initialize return object of type X with an rvalue of type X
+   5 variable has incomplete type X
+   5 static assertion failed due to requirement X: only plain functions and simple member functions
+   5 field has incomplete type X
+   5 expected X at end of declaration
+   3 cannot initialize return object of type X with an lvalue of type X
+   2 X file not found
+   2 no member named X in the global namespace; did you mean simply X?
+   2 cannot initialize object parameter of type X with an expression of type X
+   1 type-id cannot have a name
+   1 subscript of pointer to incomplete type X
+   1 non-const lvalue reference to type X cannot bind to a value of unrelated type X
+   1 no member named X in X
+   1 no matching member function for call to X
+   1 incompatible pointer types assigning to X from X
+   1 function X is used but not defined in this translation unit, and cannot be defined in any other translation unit because its type does not have linkage
+   1 expected X
+   1 cannot call operator __uuidof on a type with no GUID
+   1 assigning to X from incompatible type X
+
+== top undeclared/unknown names
+ 122 DWORD
+  74 HRESULT
+  73 IDirect3DDevice9
+  56 _stricmp
+  50 HANDLE
+  36 IDirect3DVertexBuffer9
+  34 IDirect3DSurface9
+  30 FALSE
+  29 HWND
+  28 IDirect3DTexture9
+  24 DIJOYSTATE2
+  23 INVALID_HANDLE_VALUE
+  23 BOOL
+  21 IDirect3DIndexBuffer9
+  19 DIMOUSESTATE2
+  18 UINT
+  18 TRUE
+  17 D3DMATRIX
+  15 D3DSAMP_MINFILTER
+  14 D3DFVF_DIFFUSE
+  13 INFINITE
+  12 HINSTANCE
+  11 OPEN_EXISTING
+  11 D3DTSS_COLOROP
+  11 D3DSURFACE_DESC
+  11 D3DPOOL_DEFAULT
+  11 D3DLOCKED_RECT
+  11 D3DFVF_XYZ
+  10 GetPrivateProfileIntA
+  10 GENERIC_READ
+  10 D3DTSS_ALPHAOP
+  10 D3DTS_WORLD
+  10 D3DTEXF_LINEAR
+  10 D3DFMT_A8R8G8B8
+  10 BYTE
+   9 sockaddr_in
+   9 IDirectInputDevice8A
+   9 FILE_ATTRIBUTE_DIRECTORY
+   9 ERROR_SUCCESS
+   9 D3DRS_ZWRITEENABLE
+   9 D3DPOOL_MANAGED
+   9 D3DFORMAT
+   8 MAX_PATH
+   8 FILE_ATTRIBUTE_NORMAL
+   8 D3DTSS_TEXTURETRANSFORMFLAGS
+   8 D3DTOP_MODULATE
+   8 D3DPT_TRIANGLELIST
+   8 D3DPRESENT_PARAMETERS
+   8 D3DFVF_TEX1
+   8 _strnicmp
+   7 LONG
+   7 inet_addr
+   7 GetLastError
+   7 FILE_SHARE_READ
+   7 D3DUSAGE_WRITEONLY
+   7 D3DTSS_TEXCOORDINDEX
+   6 WSAGetLastError
+   6 WNDPROC
+   6 SOCKET_ERROR
+   6 Sleep
+   6 REG_DWORD
+   6 LPTHREAD_START_ROUTINE
+   6 LARGE_INTEGER
+   6 IDirect3DPixelShader9
+   6 GetPrivateProfileStringA
+   6 GENERIC_WRITE
+   6 disposition
+   6 DIDATAFORMAT
+   6 DeleteFileA
+   6 D3DTOP_SELECTARG2
+   6 D3DRS_FOGENABLE
+   6 D3DLOCK_DISCARD
+   6 D3DFMT_X8R8G8B8
+   6 D3DCLEAR_TARGET
+   6 CREATE_SUSPENDED
+   6 _TRUNCATE
+   5 sessions
+   5 resolved
+   5 OVERLAPPED
+   5 OutputDebugStringA

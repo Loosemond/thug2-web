@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<!-- (Share > Add to Home Screen on an iPhone: full screen, without Safari's bars) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="THUG2">
+<meta name="theme-color" content="#000000">
+<title>THUG2 Web</title>
+<style>
+  :root {
+    --bg: #0e1013;
+    --panel: #171a1f;
+    --line: #2a2f37;
+    --text: #d8dde4;
+    --dim: #8a929d;
+    --accent: #e8b44c;
+    --bad: #e06c5f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  body { display: grid; grid-template-rows: auto 1fr auto; }
+  header { display: flex; gap: 16px; align-items: baseline; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 13px; margin: 0; font-weight: 600; letter-spacing: .04em; }
+  #status { color: var(--dim); }
+  #status.bad { color: var(--bad); }
+  #stats { margin-left: auto; color: var(--accent); font-variant-numeric: tabular-nums; }
+  main { display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; min-height: 0;
+    padding: 16px; }
+  canvas { max-width: 100%; max-height: 100%; aspect-ratio: 16 / 9; background: #000; outline: none;
+    image-rendering: auto; }
+  canvas:focus { box-shadow: 0 0 0 1px var(--line); }
+  details { border-top: 1px solid var(--line); background: var(--panel); }
+  summary { padding: 6px 16px; cursor: pointer; color: var(--dim); }
+  #log { margin: 0; padding: 0 16px 8px; height: 30vh; overflow: auto; white-space: pre-wrap; color: var(--dim); }
+
+  /* The touch controls (a phone or tablet, or ?touch): the game's pad, over the edges of the picture. */
+  #pad { display: none; }
+  #turn { display: none; }
+  html.touch { overflow: hidden; overscroll-behavior: none; touch-action: none; }
+  html.touch * { touch-action: none; -webkit-tap-highlight-color: transparent; }
+  body.touch { position: fixed; inset: 0; overflow: hidden; overscroll-behavior: none; background: #000;
+    grid-template-rows: 1fr; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  body.touch header { position: fixed; z-index: 2; top: env(safe-area-inset-top); left: 50%; transform: translateX(-50%);
+    border: 0; padding: 2px 10px; gap: 10px; font-size: 11px; background: rgba(0, 0, 0, .45); border-radius: 0 0 8px 8px;
+    pointer-events: none; white-space: nowrap; }
+  body.touch header h1 { display: none; }
+  body.touch details { display: none; }
+  body.touch main { padding: 0; height: 100dvh; }
+  body.touch canvas { max-height: 100dvh; box-shadow: none; }
+  body.touch #pad { display: block; position: fixed; inset: 0; z-index: 1; pointer-events: none; touch-action: none; }
+  #pad > * { position: absolute; pointer-events: auto; touch-action: none; display: grid; place-items: center;
+    color: rgba(255, 255, 255, .85); font: 600 12px/1 -apple-system, system-ui, sans-serif; letter-spacing: .02em;
+    background: rgba(255, 255, 255, .13); border: 1px solid rgba(255, 255, 255, .28); }
+  #pad > .down { background: rgba(232, 180, 76, .55); }
+  #stick { width: 150px; height: 150px; border-radius: 50%; left: calc(env(safe-area-inset-left) + 18px); bottom: 18px; }
+  #knob { position: absolute; width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 255, 255, .35);
+    left: 47px; top: 47px; pointer-events: none; }
+  .face { width: 62px; height: 62px; border-radius: 50%; font-size: 11px; }
+  .face b { display: block; font-size: 20px; line-height: 1; text-align: center; }
+  #a { right: calc(env(safe-area-inset-right) + 72px); bottom: 10px; }
+  #b { right: calc(env(safe-area-inset-right) + 8px); bottom: 74px; }
+  #x { right: calc(env(safe-area-inset-right) + 136px); bottom: 74px; }
+  #y { right: calc(env(safe-area-inset-right) + 72px); bottom: 138px; }
+  .shoulder { width: 74px; height: 40px; border-radius: 12px; top: calc(env(safe-area-inset-top) + 8px); }
+  #l2 { left: calc(env(safe-area-inset-left) + 8px); }
+  #l1 { left: calc(env(safe-area-inset-left) + 90px); }
+  #r1 { right: calc(env(safe-area-inset-right) + 90px); }
+  #r2 { right: calc(env(safe-area-inset-right) + 8px); }
+  .small { width: 58px; height: 32px; border-radius: 16px; font-size: 11px; top: calc(env(safe-area-inset-top) + 58px); }
+  #back { left: calc(env(safe-area-inset-left) + 8px); }
+  #start { right: calc(env(safe-area-inset-right) + 8px); }
+  @media (orientation: portrait) {
+    body.touch #turn { display: grid; place-items: center; position: fixed; inset: 0; z-index: 3; background: #000;
+      color: var(--text); font: 600 17px/1.4 -apple-system, system-ui, sans-serif; text-align: center; padding: 24px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>THUG2 WEB</h1>
+  <span id="status">loading…</span>
+  <span id="stats"></span>
+</header>
+<main><canvas id="canvas" width="1280" height="720" tabindex="0"></canvas></main>
+<!-- The pad (SDL game controller buttons): the d-pad, the face buttons, shoulders and triggers, Back and Start. -->
+<div id="pad">
+  <div id="stick" data-stick><div id="knob"></div></div>
+  <div class="face" id="a" data-button="0"><span><b>&#x2715;</b>Ollie</span></div>
+  <div class="face" id="b" data-button="1"><span><b>&#x25CB;</b>Grab</span></div>
+  <div class="face" id="x" data-button="2"><span><b>&#x25A1;</b>Flip</span></div>
+  <div class="face" id="y" data-button="3"><span><b>&#x25B3;</b>Grind</span></div>
+  <div class="shoulder" id="l2" data-trigger="left">Nollie</div>
+  <div class="shoulder" id="l1" data-button="9">Spin L</div>
+  <div class="shoulder" id="r1" data-button="10">Spin R</div>
+  <div class="shoulder" id="r2" data-trigger="right">Switch</div>
+  <div class="small" id="back" data-button="4">View</div>
+  <div class="small" id="start" data-button="6">Pause</div>
+</div>
+<div id="turn">Turn the phone sideways</div>
+<details><summary>log</summary><pre id="log"></pre></details>
+<script>
+"use strict";
+const canvas = document.getElementById("canvas");
+const statusLine = document.getElementById("status");
+const logView = document.getElementById("log");
+const statsView = document.getElementById("stats");
+
+function setStatus(text, bad) {
+  statusLine.textContent = text;
+  statusLine.classList.toggle("bad", !!bad);
+}
+function log(text) {
+  logView.textContent += text + "\n";
+  if (logView.textContent.length > 400000) logView.textContent = logView.textContent.slice(-200000);
+  logView.scrollTop = logView.scrollHeight;
+}
+
+// KeyboardEvent.code -> SDL scan code (USB HID usage).
+const scancodes = (() => {
+  const map = {};
+  for (let i = 0; i < 26; ++i) map["Key" + String.fromCharCode(65 + i)] = 4 + i;
+  for (let i = 1; i <= 9; ++i) map["Digit" + i] = 29 + i;
+  map.Digit0 = 39;
+  Object.assign(map, {
+    Enter: 40, Escape: 41, Backspace: 42, Tab: 43, Space: 44, Minus: 45, Equal: 46, BracketLeft: 47,
+    BracketRight: 48, Backslash: 49, Semicolon: 51, Quote: 52, Backquote: 53, Comma: 54, Period: 55, Slash: 56,
+    CapsLock: 57, PrintScreen: 70, ScrollLock: 71, Pause: 72, Insert: 73, Home: 74, PageUp: 75, Delete: 76, End: 77,
+    PageDown: 78, ArrowRight: 79, ArrowLeft: 80, ArrowDown: 81, ArrowUp: 82, NumLock: 83, NumpadDivide: 84,
+    NumpadMultiply: 85, NumpadSubtract: 86, NumpadAdd: 87, NumpadEnter: 88, Numpad0: 98, NumpadDecimal: 99,
+    IntlBackslash: 100, ControlLeft: 224, ShiftLeft: 225, AltLeft: 226, MetaLeft: 227, ControlRight: 228,
+    ShiftRight: 229, AltRight: 230, MetaRight: 231,
+  });
+  for (let i = 1; i <= 12; ++i) map["F" + i] = 57 + i;
+  for (let i = 1; i <= 9; ++i) map["Numpad" + i] = 88 + i;
+  return map;
+})();
+const namedKeycodes = { Enter: 13, Escape: 27, Backspace: 8, Tab: 9, Space: 32, Delete: 127 };
+
+function keycodeOf(event, scancode) {
+  if (event.code in namedKeycodes) return namedKeycodes[event.code];
+  if (event.key.length === 1) return event.key.toLowerCase().charCodeAt(0);
+  return scancode | 0x40000000;
+}
+function modifiersOf(event) {
+  return (event.shiftKey ? 1 : 0) | (event.ctrlKey ? 0x40 : 0) | (event.altKey ? 0x100 : 0) | (event.metaKey ? 0x400 : 0);
+}
+
+const params = new URLSearchParams(location.search);
+// ?args=-level%20TR: the game's command line (free skate in a level: -level <name>, game/front/start_level.h).
+const pageArgs = (params.get("args") || "").split(" ").filter(Boolean);
+// ?touch: the touch controls without a touch screen; ?nobc: DXT textures decoded, as on a phone's GPU.
+const touch = params.has("touch") || matchMedia("(pointer: coarse)").matches;
+document.body.classList.toggle("touch", touch);
+document.documentElement.classList.toggle("touch", touch);
+// (iOS Safari scrolls and zooms the page under a finger whatever touch-action says - a thumb on the stick moved the
+// whole page: the touches' own defaults are stopped; the pad reads pointer events, which this leaves alone)
+if (touch) {
+  for (const type of ["touchstart", "touchmove"])
+    document.addEventListener(type, event => { if (event.cancelable) event.preventDefault(); }, { passive: false });
+  for (const type of ["gesturestart", "gesturechange", "dblclick"])
+    document.addEventListener(type, event => event.preventDefault(), { passive: false });
+}
+
+// What the page logs also goes to the server (web/serve.py's POST /log, build/web/page.log): a phone's console.
+// (if the POST fails, the page stops sending its log)
+const remoteLines = [];
+let remoteOn = true;
+function remoteLog(text) {
+  remoteLines.push(text);
+  if (remoteLines.length > 2000) remoteLines.splice(0, remoteLines.length - 2000);
+}
+setInterval(() => {
+  if (!remoteOn || !remoteLines.length) return;
+  fetch("log", { method: "POST", body: remoteLines.splice(0).join("\n"), keepalive: true })
+    .then(response => { remoteOn = response.ok; }).catch(() => {});
+}, 1000);
+addEventListener("error", event => remoteLog(`error: ${event.message} (${event.filename}:${event.lineno})`));
+addEventListener("unhandledrejection", event => remoteLog(`unhandled rejection: ${event.reason}`));
+document.addEventListener("visibilitychange", () => remoteLog(`page ${document.visibilityState}`));
+remoteLog(`page: ${navigator.userAgent} | ${screen.width}x${screen.height} @${devicePixelRatio} | isolated ` +
+  `${crossOriginIsolated} | webgpu ${!!navigator.gpu} | cores ${navigator.hardwareConcurrency} | ` +
+  `${document.visibilityState} | ${location.search}`);
+// (which build this is: thug2.wasm's date on the server)
+fetch("thug2.wasm", { method: "HEAD", cache: "no-store" }).then(response => remoteLog(
+  `build: thug2.wasm of ${response.headers.get("Last-Modified")}`)).catch(() => {});
+if (navigator.gpu) {
+  navigator.gpu.requestAdapter().then(adapter => {
+    if (!adapter) return remoteLog("no WebGPU adapter");
+    const info = adapter.info || {};
+    remoteLog(`adapter: ${info.vendor} ${info.architecture} ${info.description || ""} | bc ` +
+      `${adapter.features.has("texture-compression-bc")} | maxBuffer ${adapter.limits.maxBufferSize}`);
+  }).catch(error => remoteLog(`requestAdapter: ${error}`));
+}
+
+// ?gpucount: the WebGPU calls (and bytes written) every 10 s, to the log.
+if (window.GPUQueue && params.has("gpucount")) {
+  const counts = {};
+  const count = (name, bytes) => { counts[name] = (counts[name] || 0) + (bytes ?? 1); };
+  const writeBuffer = GPUQueue.prototype.writeBuffer;
+  GPUQueue.prototype.writeBuffer = function (buffer, bufferOffset, data, dataOffset = 0, size) {
+    count("writeBuffer"); count("writeBuffer bytes", size ?? data.byteLength - dataOffset);
+    return writeBuffer.apply(this, arguments);
+  };
+  const writeTexture = GPUQueue.prototype.writeTexture;
+  GPUQueue.prototype.writeTexture = function (destination, data) {
+    count("writeTexture"); count("writeTexture bytes", data.byteLength);
+    return writeTexture.apply(this, arguments);
+  };
+  for (const [type, name] of [[GPUDevice, "createBindGroup"], [GPUDevice, "createCommandEncoder"],
+      [GPUCommandEncoder, "beginRenderPass"], [GPURenderPassEncoder, "setBindGroup"], [GPUDevice, "createBuffer"],
+      [GPUDevice, "createTexture"], [GPUTexture, "createView"], [GPUCanvasContext, "getCurrentTexture"]]) {
+    const original = type.prototype[name];
+    type.prototype[name] = function (...args) { count(name); return original.apply(this, args); };
+  }
+  setInterval(() => {
+    remoteLog("gpu calls in 10 s: " + Object.entries(counts).map(([k, v]) => `${k} ${v}`).join(", "));
+    for (const k in counts) delete counts[k];
+  }, 10000);
+}
+
+var Module = {
+  canvas,
+  arguments: pageArgs,
+  thug2Args: pageArgs,
+  thug2NoBc: params.has("nobc"),
+  print: text => { console.log(text); log(text); remoteLog(text); },
+  printErr: text => { console.warn(text); log(text); remoteLog(text); },
+  preRun: [() => {
+    // The exe's data sections are loaded at start-up, before the game folder is mounted: its bytes come from here.
+    Module.addRunDependency("thug2.exe");
+    fetch("game/THUG2.exe").then(response => {
+      if (response.status == 404)
+        throw new Error("No game here: install yours from your own discs - python3 port/tools/install_game.py (README)");
+      if (!response.ok) throw new Error("game/THUG2.exe: " + response.status);
+      return response.arrayBuffer();
+    }).then(bytes => {
+      Module.thug2Exe = bytes;
+      Module.removeRunDependency("thug2.exe");
+    }).catch(error => { setStatus(String(error), true); remoteLog(String(error)); });
+  }],
+  onRuntimeInitialized: () => {
+    setStatus("running");
+    startSound();
+    Module._thug2_page_size(canvas.width, canvas.height);
+    Module._thug2_renderer_start();
+    hookInput();
+    hookPad();
+  },
+  onAbort: what => { setStatus("stopped: " + what, true); remoteLog("stopped: " + what); },
+};
+
+function hookInput() {
+  const key = (event, down) => {
+    const scancode = scancodes[event.code];
+    if (!scancode) return;
+    event.preventDefault();
+    Module._thug2_page_key(scancode, keycodeOf(event, scancode), down ? 1 : 0, event.repeat ? 1 : 0, modifiersOf(event));
+  };
+  canvas.addEventListener("keydown", event => key(event, true));
+  canvas.addEventListener("keyup", event => key(event, false));
+  const position = event => {
+    const box = canvas.getBoundingClientRect();
+    return [Math.round((event.clientX - box.left) * canvas.width / box.width),
+            Math.round((event.clientY - box.top) * canvas.height / box.height)];
+  };
+  const sdlButton = button => [1, 2, 3][button] || 0; // (left, middle, right)
+  const sdlButtons = buttons => (buttons & 1 ? 1 : 0) | (buttons & 4 ? 2 : 0) | (buttons & 2 ? 4 : 0);
+  canvas.addEventListener("mousemove", event => Module._thug2_page_mouse(...position(event), sdlButtons(event.buttons), 0, 0));
+  canvas.addEventListener("mousedown", event => {
+    canvas.focus();
+    Module._thug2_page_mouse(...position(event), sdlButtons(event.buttons), sdlButton(event.button), 1);
+  });
+  canvas.addEventListener("mouseup", event => Module._thug2_page_mouse(...position(event), sdlButtons(event.buttons), sdlButton(event.button), 0));
+  canvas.addEventListener("wheel", event => { event.preventDefault(); Module._thug2_page_wheel(event.deltaY < 0 ? 1 : -1); }, { passive: false });
+  canvas.addEventListener("contextmenu", event => event.preventDefault());
+  canvas.addEventListener("focus", () => Module._thug2_page_focus(1));
+  canvas.addEventListener("blur", () => Module._thug2_page_focus(0));
+  canvas.focus();
+}
+
+// The pad: the touch controls and the browser's gamepads, as one SDL game controller (port/web/page_input.cpp).
+function hookPad() {
+  const pressed = new Map(); // pointer -> {button, trigger} or {stick: bits}
+  const stick = document.getElementById("stick"), knob = document.getElementById("knob");
+  const sdl = { up: 11, down: 12, left: 13, right: 14 };
+  let touchButtons = 0, touchTriggers = [0, 0];
+
+  // The stick is a d-pad: eight ways, past a dead zone.
+  const stickBits = (x, y) => {
+    const box = stick.getBoundingClientRect();
+    const radius = box.width / 2;
+    let dx = (x - box.left - radius) / radius, dy = (y - box.top - radius) / radius;
+    const length = Math.hypot(dx, dy);
+    if (length > 1) { dx /= length; dy /= length; }
+    knob.style.transform = `translate(${dx * radius * 0.6}px, ${dy * radius * 0.6}px)`;
+    if (length < 0.25) return 0;
+    const ux = dx / Math.min(length, 1), uy = dy / Math.min(length, 1), edge = 0.383; // sin(22.5 degrees)
+    return (uy < -edge ? 1 << sdl.up : 0) | (uy > edge ? 1 << sdl.down : 0) |
+      (ux < -edge ? 1 << sdl.left : 0) | (ux > edge ? 1 << sdl.right : 0);
+  };
+  const control = (x, y) => document.elementFromPoint(x, y)?.closest("#pad > [data-button], #pad > [data-trigger]");
+  const update = () => {
+    touchButtons = 0;
+    touchTriggers = [0, 0];
+    const lit = new Set();
+    for (const p of pressed.values()) {
+      if (p.stick !== undefined) { touchButtons |= p.stick; lit.add(stick); continue; }
+      if (!p.element) continue;
+      lit.add(p.element);
+      if (p.element.dataset.button) touchButtons |= 1 << Number(p.element.dataset.button);
+      else touchTriggers[p.element.dataset.trigger === "left" ? 0 : 1] = 32767;
+    }
+    for (const element of document.querySelectorAll("#pad > *")) element.classList.toggle("down", lit.has(element));
+    send();
+  };
+  const pad = document.getElementById("pad");
+  pad.addEventListener("pointerdown", event => {
+    event.preventDefault();
+    if (event.target.closest("#stick")) pressed.set(event.pointerId, { stick: stickBits(event.clientX, event.clientY) });
+    else pressed.set(event.pointerId, { element: control(event.clientX, event.clientY) });
+    update();
+  });
+  pad.addEventListener("pointermove", event => {
+    const p = pressed.get(event.pointerId);
+    if (!p) return;
+    event.preventDefault();
+    // (a finger may slide from button to button)
+    if (p.stick !== undefined) p.stick = stickBits(event.clientX, event.clientY);
+    else p.element = control(event.clientX, event.clientY);
+    update();
+  });
+  const release = event => {
+    const p = pressed.get(event.pointerId);
+    if (!p) return;
+    if (p.stick !== undefined) knob.style.transform = "";
+    pressed.delete(event.pointerId);
+    update();
+  };
+  for (const type of ["pointerup", "pointercancel"]) pad.addEventListener(type, release);
+  pad.addEventListener("contextmenu", event => event.preventDefault());
+
+  // A gamepad (the standard mapping): buttons -> SDL's, triggers and sticks -> SDL's axes.
+  const fromStandard = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 9, 5: 10, 8: 4, 9: 6, 10: 7, 11: 8, 12: 11, 13: 12, 14: 13, 15: 14, 16: 5 };
+  let last = "";
+  function send() {
+    let buttons = touchButtons, axes = [0, 0, 0, 0], triggers = touchTriggers.slice();
+    for (const gamepad of navigator.getGamepads ? navigator.getGamepads() : []) {
+      if (!gamepad || gamepad.mapping !== "standard") continue;
+      gamepad.buttons.forEach((button, i) => {
+        if (i in fromStandard && button.pressed) buttons |= 1 << fromStandard[i];
+      });
+      triggers[0] = Math.max(triggers[0], Math.round((gamepad.buttons[6]?.value || 0) * 32767));
+      triggers[1] = Math.max(triggers[1], Math.round((gamepad.buttons[7]?.value || 0) * 32767));
+      gamepad.axes.slice(0, 4).forEach((value, i) => {
+        if (Math.abs(value) > Math.abs(axes[i] / 32767)) axes[i] = Math.round(value * 32767);
+      });
+    }
+    const state = [buttons >>> 0, ...axes, ...triggers];
+    const key = state.join(",");
+    if (key === last) return;
+    if (!last && key === "0,0,0,0,0,0,0") return; // (the pad arrives once something is pressed)
+    last = key;
+    Module._thug2_page_pad(...state);
+  }
+  addEventListener("gamepadconnected", event => remoteLog(`gamepad: ${event.gamepad.id} (${event.gamepad.mapping})`));
+  const poll = () => { send(); requestAnimationFrame(poll); };
+  requestAnimationFrame(poll);
+}
+
+// Sound: the mixer's ring (port/src/dsound/mixer.cpp: written / read frame counts, capacity, then stereo float
+// frames) played by an AudioWorklet. A browser starts sound only after a touch or a key, so the context resumes on the
+// first; while it isn't running the mixer keeps time without it. ?mute: no sound.
+let soundLevel = () => params.has("mute") ? "muted" : "off";
+let soundMissed = () => 0; // (ms the worklet had nothing to play, since the last call)
+function startSound() {
+  if (params.has("mute") || !window.AudioWorkletNode) return;
+  const context = new AudioContext({ latencyHint: "interactive" });
+  const processor = `
+    class Thug2Sound extends AudioWorkletProcessor {
+      constructor(options) {
+        super();
+        const { memory, ring } = options.processorOptions;
+        this.counts = new Int32Array(memory, ring, 4);
+        this.capacity = this.counts[2];
+        this.frames = new Float32Array(memory, ring + 16, this.capacity * 2);
+      }
+      process(inputs, outputs) {
+        const [left, right] = outputs[0];
+        const written = Atomics.load(this.counts, 0);
+        let read = Atomics.load(this.counts, 1);
+        let missed = 0;
+        this.started ||= written != 0; // (none missed before the mixer's first)
+        for (let i = 0; i < left.length; ++i) {
+          if (((written - read) | 0) <= 0) { left[i] = right[i] = 0; missed += this.started ? 1 : 0; continue; }
+          const at = ((read >>> 0) % this.capacity) * 2;
+          left[i] = this.frames[at];
+          right[i] = this.frames[at + 1];
+          read = (read + 1) | 0;
+        }
+        Atomics.store(this.counts, 1, read);
+        if (missed) Atomics.add(this.counts, 3, missed);
+        return true;
+      }
+    }
+    registerProcessor("thug2-sound", Thug2Sound);`;
+  const url = URL.createObjectURL(new Blob([processor], { type: "text/javascript" }));
+  context.audioWorklet.addModule(url).then(() => {
+    const ring = Module._thug2_audio_ring();
+    const node = new AudioWorkletNode(context, "thug2-sound", { numberOfInputs: 0, outputChannelCount: [2],
+      processorOptions: { memory: Module.HEAPU8.buffer, ring } });
+    const counts = new Int32Array(Module.HEAPU8.buffer, ring, 4);
+    let missedBefore = 0;
+    soundMissed = () => {
+      const missed = Atomics.load(counts, 3);
+      const since = (missed - missedBefore) | 0;
+      missedBefore = missed;
+      return 1000 * since / context.sampleRate;
+    };
+    node.connect(context.destination);
+    // (what comes out, for the log's stats line: the level over the last 40 ms or so)
+    const analyser = new AnalyserNode(context, { fftSize: 2048 });
+    node.connect(analyser);
+    const samples = new Float32Array(analyser.fftSize);
+    soundLevel = () => {
+      analyser.getFloatTimeDomainData(samples);
+      let sum = 0;
+      for (const s of samples) sum += s * s;
+      return context.state !== "running" ? context.state : `${(10 * Math.log10(sum / samples.length + 1e-12)).toFixed(0)} dB`;
+    };
+    const running = () => {
+      Module._thug2_audio_start(context.state === "running" ? context.sampleRate : 0);
+      remoteLog(`sound: ${context.state}, ${context.sampleRate} Hz`);
+    };
+    context.addEventListener("statechange", running);
+    running();
+  }).catch(error => remoteLog(`sound: ${error}`));
+  const resume = () => { if (context.state !== "running") context.resume().catch(() => {}); };
+  for (const type of ["pointerdown", "pointerup", "touchend", "keydown", "click"])
+    addEventListener(type, resume, { capture: true });
+}
+
+// Frames drawn per second and the game's frame time, as the renderer reports them (twice a second). The log's line
+// (every 10 s) adds what made frames late over those 10 s: the longest wait between two frames, the game's longest
+// frame, the pipelines made (shader compiles) and the game's files fetched while it waited.
+let lastRemoteStats = 0;
+const late = { gap: 0, game: 0, pipelines: 0, files: 0, filesMs: 0, mixMs: 0, mixes: 0 };
+Module.thug2Stats = (fps, gameMs, gpuMs, draws, pageMs, worstGap, worstGame, pipelines, files, filesMs, mixMs) => {
+  statsView.textContent = `${fps.toFixed(0)} fps · game ${gameMs.toFixed(1)} ms · page ${pageMs.toFixed(1)} ms · ` +
+    `${draws.toFixed(0)} draws` + (gpuMs > 0 ? ` · gpu ${gpuMs.toFixed(1)} ms` : "");
+  late.gap = Math.max(late.gap, worstGap);
+  late.game = Math.max(late.game, worstGame);
+  late.pipelines += pipelines;
+  late.files += files;
+  late.filesMs += filesMs;
+  late.mixMs += mixMs;
+  ++late.mixes;
+  if (performance.now() - lastRemoteStats > 10000) {
+    lastRemoteStats = performance.now();
+    const line = `stats: ${statsView.textContent} · worst frame ${late.gap.toFixed(0)} ms (game ` +
+      `${late.game.toFixed(0)} ms) · ${late.pipelines} new pipelines · ${late.files} files fetched ` +
+      `(${late.filesMs.toFixed(0)} ms) · mixer ${(late.mixMs / Math.max(late.mixes, 1)).toFixed(1)} ms/s · ` +
+      `gaps ${(Module._thug2_audio_dry_ms ? Module._thug2_audio_dry_ms() : 0).toFixed(0)} ms · ` +
+      `silence ${soundMissed().toFixed(0)} ms · sound ${soundLevel()}`;
+    console.log(line);
+    remoteLog(line);
+    Object.assign(late, { gap: 0, game: 0, pipelines: 0, files: 0, filesMs: 0, mixMs: 0, mixes: 0 });
+  }
+};
+
+if (!navigator.gpu) setStatus(isSecureContext ? "this browser has no WebGPU" : "not HTTPS: no WebGPU (serve.py --https)", true);
+if (!crossOriginIsolated) setStatus("not cross-origin isolated: threads unavailable (serve with web/serve.py)", true);
+</script>
+<script src="thug2.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+[submodule "upstream"]
+	path = upstream
+	url = https://github.com/Loosemond/thug2-decomp.git
+	branch = web

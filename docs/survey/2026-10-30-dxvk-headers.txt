@@ -1,0 +1,36 @@
+files:      667  compile clean:      535  failing: 132
+
+== top error messages (normalised)
+ 267 unsupported architecture X for MS-style inline assembly
+ 105 X attribute is not supported on X
+  31 function X is used but not defined in this translation unit, and cannot be defined in any other translation unit because its type does not have linkage
+  18 use of undeclared identifier X
+   9 no matching function for call to X
+   5 static assertion failed due to requirement X: only plain functions and simple member functions
+   3 no member named X in X
+   2 X file not found
+   2 use of undeclared identifier X; did you mean X?
+   1 static assertion failed due to requirement X: zeroed as 0x113 dwords
+   1 cannot initialize a parameter of type X with an rvalue of type X (aka X)
+
+== top undeclared/unknown names
+   4 RegCreateKeyA
+   1 WM_POWERBROADCAST
+   1 win
+   1 WA_CLICKACTIVE
+   1 WA_ACTIVE
+   1 ValidateRect
+   1 SW_MAXIMIZE
+   1 SC_KEYMENU
+   1 S_un
+   1 mbstowcs_s
+   1 K32GetProcessMemoryInfo
+   1 GetProcessTimes
+   1 dwAvailPhys
+   1 DIJOFS_Y
+   1 DIJOFS_X
+   1 DIDOI_FFACTUATOR
+   1 DI8DEVTYPE_MOUSE
+   1 DI8DEVTYPE_KEYBOARD
+   1 DI8DEVTYPE_JOYSTICK
+   1 DI8DEVTYPE_GAMEPAD

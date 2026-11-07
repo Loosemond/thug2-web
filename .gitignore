@@ -1,0 +1,6 @@
+game/
+build/
+out/
+.DS_Store
+__pycache__/
+certs/
